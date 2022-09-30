@@ -76,20 +76,14 @@ Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1688879 (?)
 
 Chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=927119
 
-## To-Do
+## Scope patterns
 
-- [ ] Check out scopes to see if tests could automatically see alternatives
+The import maps spec also includes this idea of scopes which at the current
+could be useful to make all files in `test/` import test versions of the main
+application's references.
 
-  The scopes are not exactly what I had in mind, but if I accepted moving all
-  tests to a `test` folder, I could concievably map every import of the main app
-  to an alternative used for the tests:
+However I like my tests at `*.test.js` so scopes as they exist today won't help
+there.
+Someone already asked about patterns in `scopes` (and `imports`) here:
 
-  https://github.com/WICG/import-maps#multiple-versions-of-the-same-module
-
-  I just wish scopes could use match patterns so I wouldn't have to move tests
-  to a special folder and could have them be just `*.test.js` and have these
-  files' imports automatically resolve to the test-scoped mappings.
-
-- [ ] Ask about URL match patterns in scopes in the WICG repository
-
-  See the above to-do for context.
+https://github.com/WICG/import-maps/issues/7
