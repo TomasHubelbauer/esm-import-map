@@ -16,21 +16,17 @@
       encountered and this one uses a bare specifier which is mapped in the map
       added previously. Will this work?
     </p>
-    <script type="module">
+    <script>
       const script = document.createElement('script');
       script.type = 'importmap';
       script.text = JSON.stringify({ imports: { module: './module-c.js' } });
       document.head.append(script);
-
-      setTimeout(
-        () => {
-          const script2 = document.createElement('script');
-          script2.type = 'module';
-          script2.text = `import test from 'module';`;
-          document.head.append(script2);
-        },
-        0
-      );
+    </script>
+    <script type="module">
+      const script2 = document.createElement('script');
+      script2.type = 'module';
+      script2.text = `import test from 'module'; console.log(test);`;
+      document.head.append(script2);
     </script>
     <p>
       Nooo, check the developer tools console! The dynamic import map is added
@@ -54,6 +50,22 @@
       I did try to check around this by using a timeout with up to a second long
       interval, but to no avail. The dynamically added import map is simply not
       respected.
+    </p>
+    <p>
+      Testing in Chrome, I do find that it produces an error when inserting an
+      import map after any ES module load event has occured:
+    </p>
+    <q>
+      An import map is added after module script load was triggered.
+    </q>
+    <p>
+      This led to my realization that I can split the <code>script</code> in two
+      where one creates and inserts the import map synchronously, and the other
+      is a module script, so it loads deferrer and at a time when the import map
+      already exists.
+    </p>
+    <p>
+      This works in Firefox and will most likely work in Chrome as well!
     </p>
   </body>
 </html>
