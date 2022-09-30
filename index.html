@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ESM Import Map</title>
+    <link rel="stylesheet" href="./index.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "module": "./module-a.js"
+        }
+      }
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "module2": "./module-c.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>ESM Import Map</h1>
+    <p>
+      This page demonstrates the usage of import maps.
+    </p>
+    <p>
+      In Firefox, be sure to flip <code>dom.importMaps.enabled</code> on in the
+      <code>about:config</code> configuration page.
+    </p>
+    <p>
+      Learn about import maps
+      <a href="https://github.com/WICG/import-maps" target="_blank">here</a>.
+    </p>
+    <p>
+      This page references a ES module script which in turn references another
+      module using the bare specifier <code>module</code>.
+      By default in a browser, using a bare specifier results in an error.
+      However, with import maps, bare specifiers can be mapped to other path.
+    </p>
+    <h2>Example</h2>
+    <code class="block">
+      import test from 'module';
+    </code>
+    <p>
+      This would have been an error normally… However, when we add an import map
+      prior to where we reference the script with imports using bare specifiers:
+    </p>
+    <code class="block">
+      &lt;script type="importmap"&gt;
+        {
+          "imports": {
+            "module": "./module-a.js"
+          }
+        }      
+      &lt;/script&gt;
+    </code>
+    <p>
+      The code runs just fine…
+      The <code>import</code> of <code>module</code> in the script will resolve
+      to <code>module-a.js</code>.
+      You can see this in action using this button.
+      It shows a JavaScript <code>alert</code> with the value of the default
+      export of that script.
+    </p>
+    <button id="testButton">Test</button>
+    <script type="module">
+      import test from 'module';
+
+      const testButton = document.querySelector('#testButton');
+      testButton.addEventListener('click', () => {
+        alert(test);
+      });
+    </script>
+    <p>
+      What will happen if we change the content of the import map after the
+      script using it to resolve its dependencies has loaded?
+      Use this button to change the content of the import map to one such that
+      <code>module</code> now maps to <code>module-b.js</code>.
+    </p>
+    <button id="flipButton">Flip</button>
+    <script type="module">
+      const flipButton = document.querySelector('#flipButton');
+      flipButton.addEventListener('click', () => {
+        const importmap = document.querySelector('script[type="importmap"]');
+
+        importmap.text = JSON.stringify({
+          "imports": {
+            "module": "./module-b.js"
+          }
+        });
+      });
+    </script>
+    <p>
+      Click the <em>Test</em> button again. It still shows the resolved content
+      of the <code>module-a.js</code> script.
+      So, it looks like dynamically refreshing the import map won't re-resolve
+      modules as per the latest import map configuration.
+    </p>
+    <p>
+      But what happens when we do a dynamic <code>import</code>?
+      Press the button below to load <code>module</code> using dynamic import
+      and let's see if it produces <code>a</code> or <code>b</code>.
+    </p>
+    <button id="importButton">Import</button>
+    <script type="module">
+      const importButton = document.querySelector('#importButton');
+      importButton.addEventListener('click', async () => {
+        const test = await import('module');
+        alert(test.default);
+      });
+    </script>
+    <p>
+      Hmm, even now, the module always resolves to <code>module-a.js</code> and
+      that happens regardless of whether the <em>Test</em> button is pushed
+      prior (hypothesis being that it somehow "solidifies" the resolved graph),
+      it just shows <code>a</code> no matter what.
+    </p>
+    <p>
+      I do see the <code>script[type="importmap"]</code> updating its content in
+      the DOM though. I wonder if manually inserting a new import map script
+      might cause something to kick in that doesn't when updating the content of
+      the existing script.
+    </p>
+    <p>
+      The button below removes the existing source map from the DOM and inserts
+      a new one, pointing to the module B.
+    </p>
+    <button id="replaceButton">Replace</button>
+    <script type="module">
+      const replaceButton = document.querySelector('#replaceButton');
+      replaceButton.addEventListener('click', () => {
+        const importmap = document.querySelector('script[type="importmap"]');
+        importmap.remove();
+
+        const script = document.createElement('script');
+        script.type = 'importmap';
+        script.text = JSON.stringify({
+          "imports": {
+            "module": "./module-b.js"
+          }
+        });
+
+        document.head.append(script);
+      });
+    </script>
+    <p>
+      Alright, it seems as though it is just straight not possible to amend an
+      existing import map once it is resolved for the initial time.
+    </p>
+    <p>
+      Next I wonder whether there can be two import maps which get merged when
+      the resolution happens. I have added a new one (to the HTML) and this
+      next <em>Test</em> button uses a bare specifier for another mapped word
+      which comes from the second import map. Let's see if the browser is smart
+      enough to figure this out.
+    </p>
+    <button id="test2Button">Test 2</button>
+    <script type="module">
+      import test from 'module2';
+
+      const test2Button = document.querySelector('#test2Button');
+      test2Button.addEventListener('click', () => {
+        alert(test);
+      });
+    </script>
+    <p>
+      Whoah! This doesn't work! I fully expected the browser would merge the
+      import maps into one.
+    </p>
+    <p>
+      This means that the only possible avenue of having fun with import maps at
+      runtime left is to see whether when a page is loaded with no import map,
+      then one is added dynamically and then module scripts are encountered and
+      those use bare specifiers, whether that will work; whether the dynamic
+      import map will be respected.
+    </p>
+    <p>
+      I cannot test this in this same file because it already has static import
+      maps for the previous tests, but I have made another file where to test
+      this.
+    </p>
+    <a href="./index2.html">See here</a>
+  </body>
+</html>

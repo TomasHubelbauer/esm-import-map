@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ESM Import Map</title>
+    <link rel="stylesheet" href="./index.css" />
+
+  </head>
+  <body>
+    <h1>ESM Import Map 2</h1>
+    <p>
+      This page demonstrates the following: HTML starts off with no import map
+      script; a deferred script is encountered and it crafts an import map at
+      runtime and places its script to the head of the DOM; another ES module is
+      encountered and this one uses a bare specifier which is mapped in the map
+      added previously. Will this work?
+    </p>
+    <script type="module">
+      const script = document.createElement('script');
+      script.type = 'importmap';
+      script.text = JSON.stringify({ imports: { module: './module-c.js' } });
+      document.head.append(script);
+
+      setTimeout(
+        () => {
+          const script2 = document.createElement('script');
+          script2.type = 'module';
+          script2.text = `import test from 'module';`;
+          document.head.append(script2);
+        },
+        0
+      );
+    </script>
+    <p>
+      Nooo, check the developer tools console! The dynamic import map is added
+      to the DOM, and then the other script is added, but the developer tools
+      show the error seen when no import map is found:
+    </p>
+    <q>
+      The specifier “module” was a bare specifier, but was not remapped to
+      anything.
+    </q>
+    <p>
+      We can't even wait for the <code>load</code> event of the import map
+      script because that even only fires for scripts with a <code>src</code>
+      attribute - when their linked file downloads.
+      Inline scripts don't have this behavior and we can't use a linked script,
+      because then we'll run into the issue described on the main page where
+      the <code>file:</code> protocol won't serve the right MIME type for the
+      import map script file.
+    </p>
+    <p>
+      I did try to check around this by using a timeout with up to a second long
+      interval, but to no avail. The dynamically added import map is simply not
+      respected.
+    </p>
+  </body>
+</html>

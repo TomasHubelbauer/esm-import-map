@@ -1,0 +1,10 @@
+body {
+  font: icon;
+  margin-inline: auto;
+  width: 80ch;
+}
+
+code.block {
+  display: block;
+  white-space: pre;
+}
