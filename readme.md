@@ -67,6 +67,15 @@ of import maps.
 
 I am working around this by using an inline import map.
 
+## Multiple import maps
+
+Neither Firefox nor Chrome support merging multiple import maps at the time of
+writing.
+
+Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1688879 (?)
+
+Chrome bug: https://bugs.chromium.org/p/chromium/issues/detail?id=927119
+
 ## To-Do
 
 - [ ] Check out scopes to see if tests could automatically see alternatives
